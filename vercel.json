@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/perfect_roast.html"
+    }
+  ]
+}
