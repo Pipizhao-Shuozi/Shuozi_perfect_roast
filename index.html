@@ -1,0 +1,2817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Perfect Roast - Campfire Party</title>
+  <!-- Tailwind CSS -->
+  <script>
+    window.__loadScriptOnce = function(src) {
+      if (document.querySelector('script[data-src="' + src + '"]')) return;
+      const script = document.createElement('script');
+      script.src = src;
+      script.dataset.src = src;
+      document.head.appendChild(script);
+    };
+
+    window.__loadStylesheetOnce = function(href) {
+      if (document.querySelector('link[data-href="' + href + '"]')) return;
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.dataset.href = href;
+      document.head.appendChild(link);
+    };
+
+    window.__fallbackTailwind = function() {
+      window.__loadScriptOnce('https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4');
+    };
+
+    window.__fallbackFontAwesome = function() {
+      window.__loadStylesheetOnce('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css');
+    };
+
+    window.addEventListener('load', () => {
+      window.setTimeout(() => {
+        if (!window.tailwind) {
+          window.__fallbackTailwind();
+        }
+      }, 1200);
+    });
+  </script>
+  <script src="https://cdn.tailwindcss.com" onerror="window.__fallbackTailwind()"></script>
+  <!-- FontAwesome 图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" onerror="window.__fallbackFontAwesome()">
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      overscroll-behavior: none;
+      background: #121824;
+    }
+    body {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      min-height: 100dvh;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.3);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(245, 158, 11, 0.5);
+      border-radius: 3px;
+    }
+    .mini-alert-overlay {
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .mini-alert-overlay.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .mini-alert-overlay.is-hiding {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+      transition-duration: 160ms;
+    }
+    .mini-alert-card {
+      background: rgba(15, 23, 42, 0.48);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.24);
+    }
+    .score-bump {
+      animation: scoreBump 320ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    }
+    .drag-guide {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.92);
+      transition: opacity 220ms ease, transform 220ms ease;
+      pointer-events: none;
+    }
+    .drag-guide.is-visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .drag-guide-hand {
+      animation: dragGuideSlide 680ms ease-in-out 1;
+    }
+    @keyframes scoreBump {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.18); }
+      70% { transform: scale(0.96); }
+      100% { transform: scale(1); }
+    }
+    @keyframes dragGuideSlide {
+      0% { transform: translateX(-10px); }
+      50% { transform: translateX(12px); }
+      100% { transform: translateX(-6px); }
+    }
+  </style>
+</head>
+<body class="bg-[#121824] text-amber-50 font-sans flex items-center justify-center min-h-screen overflow-hidden">
+
+  <!-- 游戏主容器 -->
+  <div class="relative w-full max-w-md h-[100dvh] max-h-[100dvh] sm:h-[90vh] bg-black shadow-2xl overflow-hidden sm:rounded-[40px] border-4 border-[#2b3a4d] flex flex-col">
+    
+    <!-- 顶部状态栏 -->
+    <div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
+      <!-- 关卡/生命值 -->
+      <div class="flex flex-col gap-1 pointer-events-auto">
+        <span id="level-indicator" class="px-3 py-1 rounded-full bg-black/40 border border-white/10 text-amber-300 font-bold text-xs shadow-lg backdrop-blur-md">
+          Level 1: Camp Rookie
+        </span>
+        <div class="flex gap-1 mt-1 bg-black/30 px-2.5 py-1 rounded-full backdrop-blur-md border border-white/5">
+          <span id="hearts-container" class="text-rose-500 text-xs tracking-wider flex items-center">
+            <i class="fa-solid fa-heart mx-0.5"></i>
+            <i class="fa-solid fa-heart mx-0.5"></i>
+            <i class="fa-solid fa-heart mx-0.5"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- 实时分数 -->
+      <div class="flex flex-col items-end pointer-events-auto">
+        <span id="score-display" class="text-5xl font-extrabold text-[#e11d48] tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">0</span>
+        <span class="text-[10px] text-white/90 font-bold tracking-wider -mt-1 uppercase">Score</span>
+      </div>
+    </div>
+
+    <!-- 游戏主画布 -->
+    <div class="relative flex-1 w-full bg-transparent">
+      <canvas id="game-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+      <div id="drag-guide" class="drag-guide absolute z-[15] hidden">
+        <div class="flex flex-col items-center gap-1.5">
+          <div class="drag-guide-hand w-11 h-11 rounded-full bg-slate-950/48 backdrop-blur-md border border-white/15 shadow-[0_8px_22px_rgba(15,23,42,0.26)] flex items-center justify-center">
+            <i class="fa-solid fa-hand-pointer text-base text-amber-300"></i>
+          </div>
+          <div id="drag-guide-text" class="px-3 py-1.5 rounded-full bg-slate-950/34 backdrop-blur-md border border-white/10 text-[11px] font-bold tracking-wide text-white/88">
+            Drag to bounce!
+          </div>
+        </div>
+      </div>
+      
+      <!-- 游戏新手教学遮罩层 -->
+      <div id="tutorial-overlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center z-20 transition-all duration-300">
+        <div class="bg-slate-900/95 border-2 border-amber-500/40 rounded-3xl p-5 max-w-xs shadow-2xl relative">
+          <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-amber-500 text-slate-950 p-3 rounded-full shadow-lg border-4 border-slate-900">
+            <i class="fa-solid fa-fire text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-amber-400 mt-4 mb-2">How to Play</h3>
+          <p class="text-[11px] leading-relaxed text-slate-400 mb-3">Keep it bouncing. Drop when golden.</p>
+          <div class="w-full bg-slate-950/55 rounded-2xl p-2.5 mb-3 border border-white/8 flex justify-center overflow-hidden">
+            <svg viewBox="0 0 220 120" class="w-full max-w-[230px] h-[120px]" fill="none">
+              <path d="M34 100 Q110 88 186 100" stroke="#475569" stroke-width="2.5" stroke-linecap="round" opacity="0.75"/>
+              <path d="M101 100 L119 100 L110 88 Z" fill="#334155" stroke="#94A3B8" stroke-width="1.5" opacity="0.9"/>
+              <circle cx="110" cy="88" r="7" fill="#F59E0B" stroke="white" stroke-width="2"/>
+              <circle cx="110" cy="88" r="13" stroke="#F59E0B" stroke-width="1.5" opacity="0.25"/>
+              <path d="M62 54 A52 52 0 0 1 158 48" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4 4" opacity="0.8"/>
+              <path d="M158 48 L151 45 M158 48 L153 55" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+              <line x1="110" y1="88" x2="154" y2="48" stroke="#9A6136" stroke-width="7" stroke-linecap="round"/>
+              <line x1="116" y1="82" x2="147" y2="54" stroke="#C08457" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+              <circle cx="154" cy="48" r="8" fill="#F59E0B" stroke="white" stroke-width="2"/>
+              <circle cx="154" cy="48" r="16" stroke="#F59E0B" stroke-width="2" opacity="0.25"/>
+              <g transform="translate(78 26) rotate(-10)">
+                <rect x="-9" y="-7" width="18" height="14" rx="4" fill="white" stroke="#CBD5E1" stroke-width="1.5"/>
+                <circle cx="-3" cy="-1" r="1.2" fill="#0F172A"/>
+                <circle cx="4" cy="-1" r="1.2" fill="#0F172A"/>
+                <path d="M-3 4 Q0 6 4 4" stroke="#0F172A" stroke-width="1.2" stroke-linecap="round"/>
+              </g>
+              <path d="M78 28 Q98 70 120 54 Q138 34 154 48" stroke="white" stroke-width="2" stroke-dasharray="4 4" opacity="0.45"/>
+              <g transform="translate(171 58)">
+                <circle cx="0" cy="0" r="15" fill="#0F172A" opacity="0.45"/>
+                <path d="M-3 -7 L-3 6 M-3 -7 C-3 -10 2 -10 2 -7 L2 -1 M2 -2 C2 -5 7 -5 7 -2 L7 4 M-3 5 L3 11 C6 14 12 10 11 5 L10 0" stroke="#FDE68A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+              <text x="110" y="114" fill="#94A3B8" font-size="8" text-anchor="middle" font-family="sans-serif" font-weight="700">Fixed Pivot</text>
+              <text x="170" y="35" fill="#FBBF24" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="800">Drag Tip</text>
+              <text x="62" y="17" fill="white" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="800" opacity="0.9">Bounce!</text>
+            </svg>
+          </div>
+          <div class="space-y-2 text-xs text-left text-slate-300">
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+              <span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold border border-white/10 shrink-0">1</span>
+              <p class="font-bold text-amber-200">Drag</p>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+              <span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold border border-white/10 shrink-0">2</span>
+              <p class="font-bold text-amber-300">Bounce x3</p>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+              <span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold border border-white/10 shrink-0">3</span>
+              <p class="font-bold text-amber-400">Drop Golden</p>
+            </div>
+          </div>
+
+          <button id="start-btn" class="mt-4 w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-slate-950 font-black rounded-xl shadow-lg shadow-orange-500/20 transition-all">
+            Start
+          </button>
+        </div>
+      </div>
+
+      <!-- 木柴障碍物首次出现提示卡片 -->
+      <div id="log-alert-overlay" class="mini-alert-overlay absolute top-4 left-1/2 z-20 hidden w-[calc(100%-2rem)] max-w-[17rem] -translate-x-1/2 text-center">
+        <div class="mini-alert-card px-4 py-3 flex flex-col items-center">
+          <i class="fa-solid fa-tree text-[1.65rem] text-amber-500 drop-shadow-[0_2px_8px_rgba(217,119,6,0.28)] mb-1.5"></i>
+          <h3 class="text-[15px] font-black text-amber-300 leading-none mb-1">New Obstacle: Log</h3>
+          <p class="text-[12px] leading-snug text-slate-200/90">Changes the bounce!</p>
+        </div>
+      </div>
+
+      <!-- 火星元素首次出现提示卡片 -->
+      <div id="spark-alert-overlay" class="mini-alert-overlay absolute top-4 left-1/2 z-20 hidden w-[calc(100%-2rem)] max-w-[17rem] -translate-x-1/2 text-center">
+        <div class="mini-alert-card px-4 py-3 flex flex-col items-center">
+          <i class="fa-solid fa-fire-flame-curved text-[1.65rem] text-orange-400 drop-shadow-[0_2px_8px_rgba(234,88,12,0.28)] mb-1.5"></i>
+          <h3 class="text-[15px] font-black text-orange-300 leading-none mb-1">New Element: Spark</h3>
+          <p class="text-[12px] leading-snug text-slate-200/90">Roasts faster!</p>
+        </div>
+      </div>
+
+      <!-- 黄油滴首次出现提示卡片 -->
+      <div id="butter-alert-overlay" class="mini-alert-overlay absolute top-4 left-1/2 z-20 hidden w-[calc(100%-2rem)] max-w-[17rem] -translate-x-1/2 text-center">
+        <div class="mini-alert-card px-4 py-3 flex flex-col items-center">
+          <i class="fa-solid fa-cube text-[1.65rem] text-amber-300 drop-shadow-[0_2px_8px_rgba(251,191,36,0.28)] mb-1.5"></i>
+          <h3 class="text-[15px] font-black text-amber-200 leading-none mb-1">New Element: Butter</h3>
+          <p class="text-[12px] leading-snug text-slate-200/90">Catch it for bounce boost!</p>
+        </div>
+      </div>
+
+      <!-- 游戏结束结算面板 -->
+      <div id="gameover-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-md hidden flex flex-col justify-center items-center p-6 text-center z-20">
+        <div class="bg-slate-900 border-2 border-red-500/40 rounded-3xl p-6 max-w-xs shadow-2xl flex flex-col items-center">
+          <i class="fa-solid fa-fire text-5xl text-orange-500 drop-shadow-[0_2px_8px_rgba(249,115,22,0.4)]"></i>
+          <h3 class="text-2xl font-black text-red-400 mt-4 mb-2">Too Toasty!</h3>
+          <p class="text-slate-300 text-sm mb-4">You burned the batch.</p>
+          <div class="bg-black/40 p-3 rounded-2xl mb-5 w-full">
+            <span class="text-xs text-slate-400 block uppercase">Score</span>
+            <span id="final-score" class="text-3xl font-black text-amber-400">0</span>
+            <span id="final-rank" class="mt-2 text-sm font-bold text-white block">Camp Rookie</span>
+          </div>
+          <p id="share-line" class="text-xs leading-relaxed text-slate-300">Better than 87%</p>
+          <p id="challenge-line" class="text-xs leading-relaxed text-slate-400 mb-4">Beat me?</p>
+          <div class="w-full grid grid-cols-2 gap-3">
+            <button id="restart-btn" class="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all">
+              Retry
+            </button>
+            <button id="share-btn" class="w-full py-3 bg-white/8 border border-white/12 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all">
+              Copy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第一关成功通关面板 -->
+      <div id="levelclear-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-md hidden flex flex-col justify-center items-center p-6 text-center z-20">
+        <div class="bg-slate-900 border-2 border-amber-500/40 rounded-3xl p-6 max-w-xs shadow-2xl flex flex-col items-center">
+          <i class="fa-solid fa-trophy text-5xl text-amber-400 drop-shadow-[0_2px_8px_rgba(250,204,21,0.4)]"></i>
+          <h3 class="text-2xl font-black text-amber-400 mt-4 mb-2">Level 1 Cleared!</h3>
+          <p class="text-slate-300 text-sm mb-4">Things get messy now.</p>
+          <button id="next-level-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold rounded-xl shadow-lg active:scale-95 transition-all">
+            Level 2
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部控制按钮栏 - 3D 药丸按钮样式 -->
+    <div class="p-4 bg-[#ccd7e2] border-t border-[#a1b3c6] flex justify-between gap-3 z-10">
+      
+      <!-- Reset 蓝色厚底 3D 按钮 -->
+      <button id="btn-reset" class="flex-1 py-3 px-1.5 rounded-[22px] bg-[#3a689b] border-b-[5px] border-[#22456a] hover:bg-[#4375ac] text-white font-black text-sm flex items-center justify-center gap-2 active:translate-y-[2px] active:border-b-[2px] transition-all shadow-md">
+        <!-- 手绘棉花糖棒图标 -->
+        <svg class="w-5 h-5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" viewBox="0 0 100 100" fill="none">
+          <line x1="20" y1="80" x2="70" y2="30" stroke="#fef08a" stroke-width="8" stroke-linecap="round"/>
+          <rect x="55" y="15" width="28" height="28" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="3" transform="rotate(15, 69, 29)"/>
+        </svg>
+        <span>Reset</span>
+      </button>
+
+      <!-- Settings 绿色厚底 3D 按钮 -->
+      <button id="btn-settings" class="flex-1 py-3 px-1.5 rounded-[22px] bg-[#537c3f] border-b-[5px] border-[#345127] hover:bg-[#5e8c48] text-white font-black text-sm flex items-center justify-center gap-2 active:translate-y-[2px] active:border-b-[2px] transition-all shadow-md">
+        <i class="fa-solid fa-gear text-base drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]"></i>
+        <span>Settings</span>
+      </button>
+
+      <!-- Shop 橙色厚底 3D 按钮 -->
+      <button id="btn-shop" class="flex-1 py-3 px-1.5 rounded-[22px] bg-[#bf6c2c] border-b-[5px] border-[#8c4918] hover:bg-[#d07834] text-white font-black text-sm flex items-center justify-center gap-2 active:translate-y-[2px] active:border-b-[2px] transition-all shadow-md">
+        <i class="fa-solid fa-cart-shopping text-base drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]"></i>
+        <span>Shop</span>
+      </button>
+    </div>
+
+    <!-- 游戏设置面板 -->
+    <div id="settings-panel" class="absolute inset-x-0 bottom-0 bg-slate-900 border-t-2 border-amber-500/30 rounded-t-3xl p-6 z-30 transform translate-y-full transition-transform duration-300 ease-out">
+      <div class="flex justify-between items-center mb-5">
+        <h4 class="text-lg font-black text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-sliders"></i> Game Settings
+        </h4>
+        <button id="close-settings" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
+          <span class="text-sm font-semibold">Sound Effects</span>
+          <button id="toggle-sound" class="w-14 h-8 bg-amber-500 rounded-full p-1 transition-all flex items-center justify-end">
+            <div class="bg-slate-950 w-6 h-6 rounded-full shadow-md"></div>
+          </button>
+        </div>
+        <details class="bg-white/5 p-3 rounded-xl border border-white/5">
+          <summary class="cursor-pointer list-none flex items-center justify-between text-sm font-semibold text-slate-100">
+            <span>How to Play</span>
+            <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+          </summary>
+          <div class="mt-3 space-y-2 text-xs text-slate-300">
+            <div class="bg-black/20 rounded-lg p-2.5">
+              <p class="font-bold text-amber-200">Drag the skewer</p>
+              <p class="mt-1 text-slate-400">Aim the bounce.</p>
+            </div>
+            <div class="bg-black/20 rounded-lg p-2.5">
+              <p class="font-bold text-amber-300">Bounce 3 times</p>
+              <p class="mt-1 text-slate-400">Three hits = golden.</p>
+            </div>
+            <div class="bg-black/20 rounded-lg p-2.5">
+              <p class="font-bold text-amber-400">Drop when golden</p>
+              <p class="mt-1 text-slate-400">Too many hits = burnt.</p>
+            </div>
+          </div>
+        </details>
+        <div class="bg-white/5 p-3 rounded-xl">
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold">Skewer Max Length</span>
+            <span id="stick-length-val" class="text-amber-400">180 px</span>
+          </div>
+          <input id="stick-length-slider" type="range" min="120" max="240" step="10" value="180" class="w-full accent-amber-500">
+        </div>
+        <div class="bg-white/5 p-3 rounded-xl">
+          <p class="text-xs text-slate-400">Reset the skewer to its default angle?</p>
+          <button id="reset-stick-btn" class="mt-2 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg border border-slate-700">
+            Reset Skewer Angle
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 露营商店面板 -->
+    <div id="shop-panel" class="absolute inset-x-0 bottom-0 h-[65vh] bg-slate-900 border-t-2 border-amber-500/30 rounded-t-3xl p-6 z-30 transform translate-y-full transition-transform duration-300 ease-out flex flex-col">
+      <div class="flex justify-between items-center mb-4 shrink-0">
+        <h4 class="text-lg font-black text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-store"></i> Camp Shop
+        </h4>
+        <div class="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full border border-amber-500/20">
+          <span class="text-xs text-slate-400">Score:</span>
+          <span id="shop-coins" class="font-bold text-amber-400">0</span>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar space-y-5 pb-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h5 class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Food Skin</h5>
+            <span class="text-[10px] text-slate-400">Choose your roast.</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button class="shop-item border-2 border-amber-500 bg-amber-500/10 p-2.5 rounded-xl text-left transition-all relative" data-type="food" data-id="marshmallow">
+              <span class="text-xs font-bold block text-white">Marshmallow</span>
+              <span class="text-[10px] text-slate-400 block">North America</span>
+              <span class="shop-item-status text-[10px] text-amber-400">Selected</span>
+            </button>
+            <button class="shop-item border-2 border-slate-800 bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-left transition-all relative" data-type="food" data-id="banana">
+              <span class="text-xs font-bold block">Banana</span>
+              <span class="text-[10px] text-slate-400 block">Southeast Asia</span>
+              <span class="shop-item-status text-[10px] text-slate-400">Free</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 烤签魔法光华皮肤 -->
+        <div>
+          <h5 class="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">Skewer Glow</h5>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button class="shop-item border-2 border-amber-500 bg-amber-500/10 p-2.5 rounded-xl text-left transition-all relative" data-type="line" data-id="amber" data-price="0">
+              <span class="text-xs font-bold block text-white">Golden Glow</span>
+              <span class="shop-item-status text-[10px] text-amber-400">Selected</span>
+            </button>
+            <button class="shop-item border-2 border-slate-800 bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-left transition-all relative" data-type="line" data-id="emerald" data-price="20">
+              <span class="text-xs font-bold block">Forest Glow</span>
+              <span class="shop-item-status text-[10px] text-slate-400">20 score</span>
+            </button>
+            <button class="shop-item border-2 border-slate-800 bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-left transition-all relative" data-type="line" data-id="cosmic" data-price="40">
+              <span class="text-xs font-bold block">Cosmic Glow</span>
+              <span class="shop-item-status text-[10px] text-slate-400">40 score</span>
+            </button>
+            <button class="shop-item border-2 border-slate-800 bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-left transition-all relative" data-type="line" data-id="rainbow" data-price="60">
+              <span class="text-xs font-bold block">Rainbow Glow</span>
+              <span class="shop-item-status text-[10px] text-slate-400">60 score</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 棉花糖表情皮肤 -->
+        <div>
+          <h5 class="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">Marshmallow Faces</h5>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button class="shop-item border-2 border-amber-500 bg-amber-500/10 p-2.5 rounded-xl text-left transition-all relative" data-type="face" data-id="happy" data-price="0">
+              <span class="text-xs font-bold block text-white">Soft Smile (Default)</span>
+              <span class="shop-item-status text-[10px] text-amber-400">Selected</span>
+            </button>
+            <button class="shop-item border-2 border-slate-800 bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-left transition-all relative" data-type="face" data-id="cool" data-price="25">
+              <span class="text-xs font-bold block">Cool Shades</span>
+              <span class="shop-item-status text-[10px] text-slate-400">25 score</span>
+            </button>
+            <button class="shop-item border-2 border-slate-800 bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-left transition-all relative" data-type="face" data-id="cute" data-price="35">
+              <span class="text-xs font-bold block">Cute Face</span>
+              <span class="shop-item-status text-[10px] text-slate-400">35 score</span>
+            </button>
+            <button class="shop-item border-2 border-slate-800 bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-left transition-all relative" data-type="face" data-id="cat" data-price="50">
+              <span class="text-xs font-bold block">Kitty Whiskers</span>
+              <span class="shop-item-status text-[10px] text-slate-400">50 score</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button id="close-shop" class="mt-4 w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 active:scale-95 transition-all">
+        Back to Game
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // --- Synth Engine Sound Effects (Web Audio API) ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      playBounce(stage) {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        // Different pitch scales for roast stages
+        const frequencies = [261.63, 329.63, 392.00, 523.25, 110.0]; // C4, E4, G4, C5, A2
+        const freq = frequencies[Math.min(stage, frequencies.length - 1)];
+
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (stage === 4) {
+          // Melted or burnt down
+          osc.type = 'sawtooth';
+          gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.6);
+        } else {
+          // Playful spring sound
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.15);
+        }
+      }
+      playDeliver() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+        osc.frequency.exponentialRampToValueAtTime(783.99, this.ctx.currentTime + 0.1); // G5
+        osc.frequency.exponentialRampToValueAtTime(1046.50, this.ctx.currentTime + 0.25); // C6
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+      }
+      playSizzle() {
+        if (!this.enabled) return;
+        this.init();
+        // Soft white noise for roasting ambience
+        const bufferSize = this.ctx.sampleRate * 0.15;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+        
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // --- Game Engine Setup ---
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const backgroundImage = new Image();
+    backgroundImage.src = 'bbq_background.png';
+
+    // Interactive wooden skewer object
+    const stick = {
+      pivotX: 0,
+      pivotY: 0,
+      angle: -Math.PI / 4, // Default tilt
+      length: 130,
+      maxLength: 180,
+      targetX: 0,
+      targetY: 0,
+      update() {
+        this.targetX = this.pivotX + Math.cos(this.angle) * this.length;
+        this.targetY = this.pivotY + Math.sin(this.angle) * this.length;
+      }
+    };
+
+    // 新增: 固定的 “∩” 形木质弧形反弹板物理对象属性
+    const arcBumper = {
+      radius: 45,        // 反弹板中轴线半径
+      thickness: 10,     // 弧板厚度
+      startAngle: Math.PI, // 对应上半圆的起始角（左）
+      endAngle: 2 * Math.PI // 对应上半圆的终止角（右）
+    };
+
+    let currentLineSkin = 'amber'; // Custom skewer color glow theme
+    let currentFaceSkin = 'happy';
+    let currentFoodSkin = (() => {
+      try {
+        const saved = localStorage.getItem('perfect_roast_food_skin');
+        return saved === 'banana' ? 'banana' : 'marshmallow';
+      } catch {
+        return 'marshmallow';
+      }
+    })();
+    let skewerButterTimer = 0;
+    const SKEWER_BUTTER_DURATION = 360;
+    const SKEWER_BUTTER_BOUNCE_MULTIPLIER = 2;
+    const SKEWER_DRAG_HIT_RADIUS = 38;
+    let perfectStreak = 0;
+
+    // Core scoring / lives
+    let score = 0; // We unified to use Score instead of perfect roasts count
+    let coins = 0;
+    let lives = 3;
+    let gameActive = false;
+    let currentLevel = 1; // 1: Rookie, 2: Fire Party
+    let lineLifetime = 3500; // Reserved
+
+    // New state variables for First-Time Intro Alerts
+    let hasShownLogAlert = false;
+    let hasShownSparkAlert = false;
+    let hasShownButterAlert = false;
+    let isGamePausedForAlert = false; // Freezes gameplay rendering but keeps drawings alive
+
+    // Object arrays
+    const marshmallows = [];
+    const obstacles = []; 
+    const sparks = [];     // Falling spark obstacles/boosters
+    const butterDrops = [];
+    const heartDrops = [];
+    const particles = []; // Background ambient fire embers particles (retained for layout/vibe)
+    const floatTexts = []; // Point and toast popups
+
+    // Purchased skins inventory
+    const purchasedSkins = {
+      line: ['amber'],
+      face: ['happy']
+    };
+
+    // Campfire positions
+    let fireY = 0;
+    let campfireX = 0;
+
+    // Pointer events state
+    let isDrawing = false; 
+
+    // Frame timings
+    let lastTime = performance.now();
+    let spawnTimer = 0;
+    let obstacleSpawnTimer = 0;
+    let sparkSpawnTimer = 0; 
+    let butterSpawnTimer = 0;
+    let butterNextSpawnDelay = 16000;
+    let heartSpawnTimer = 0;
+    let heartNextSpawnDelay = 18000 + Math.random() * 10000;
+    let levelTimeElapsed = 0; // Tracks play time in current level to enforce first-10s-safety-cooldown
+
+    // DOM attachments
+    const scoreDisplay = document.getElementById('score-display');
+    const heartsContainer = document.getElementById('hearts-container');
+    const levelIndicator = document.getElementById('level-indicator');
+    const tutorialOverlay = document.getElementById('tutorial-overlay'); // Added missing DOM attachment reference to resolve ReferenceError
+    const gameoverOverlay = document.getElementById('gameover-overlay');
+    const levelclearOverlay = document.getElementById('levelclear-overlay');
+    const settingsPanel = document.getElementById('settings-panel');
+    const shopPanel = document.getElementById('shop-panel');
+    const shopCoins = document.getElementById('shop-coins');
+    const finalRank = document.getElementById('final-rank');
+    const shareLine = document.getElementById('share-line');
+    const challengeLine = document.getElementById('challenge-line');
+    const shareBtn = document.getElementById('share-btn');
+    const dragGuide = document.getElementById('drag-guide');
+    const dragGuideText = document.getElementById('drag-guide-text');
+    let dragGuideTimeout = null;
+    let hasShownDropGuide = false;
+
+    // Canvas scaling
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      fireY = rect.height - 110;
+      campfireX = rect.width / 2;
+
+      // 将木签固定点设置在画面中部偏上位置 (上移固定点)
+      stick.pivotX = campfireX;
+      stick.pivotY = rect.height * 0.55; // 改为0.55
+      stick.update();
+      if (!dragGuide.classList.contains('hidden')) {
+        positionDragGuide();
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- Entity Classes ---
+
+    // 1. Marshmallow Class
+    class Marshmallow {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = 0;
+        this.bounceCount = 0; // Number of skewer hits
+        this.hasScoredSecondBounce = false;
+        this.hasLostLife = false;
+        this.hitCooldown = 0;
+        this.hasShownBurntToast = false;
+        this.baseRadius = 18;
+        this.radius = 18;
+        this.elasticity = 0.85;
+        
+        // Slower initial fall speed when score is low (score <= 2)
+        // Adjust gravity and horizontal drift speed dynamically based on current Score
+        let gravityScale = 1.0;
+        if (score <= 2) {
+          gravityScale = 0.55; // Slower gravity initially
+          this.vx *= 0.7;      // Slower horizontal velocity
+        } else if (score <= 5) {
+          gravityScale = 0.95; // Normal-medium gravity
+        } else {
+          gravityScale = 1.25; // Challenging high gravity
+          this.vx *= 1.2;
+        }
+        this.gravity = 0.18 * gravityScale;
+
+        this.meltTimer = 0; 
+        this.isMelted = false;
+        this.slipperyTimer = 0;
+        this.slipperyBounceBoost = false;
+        this.angle = Math.random() * Math.PI * 2;
+        this.angularVelocity = (Math.random() - 0.5) * 0.05;
+      }
+
+      update() {
+        if (this.hitCooldown > 0) this.hitCooldown--;
+
+        if (this.isMelted) {
+          this.meltTimer += 1;
+          this.radius = Math.max(2, this.radius - 0.6);
+          this.vy += 0.05;
+          this.y += this.vy;
+          return;
+        }
+
+        if (this.slipperyTimer > 0) {
+          this.slipperyTimer--;
+          if (this.slipperyTimer <= 0) {
+            this.slipperyTimer = 0;
+            this.slipperyBounceBoost = false;
+          }
+        }
+
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.angle += this.angularVelocity;
+
+        // Sidewall bouncing
+        const canvasRect = canvas.getBoundingClientRect();
+        if (this.x - this.radius < 0) {
+          this.x = this.radius;
+          this.vx = -this.vx * 0.6;
+        } else if (this.x + this.radius > canvasRect.width) {
+          this.x = canvasRect.width - this.radius;
+          this.vx = -this.vx * 0.6;
+        }
+
+        // Adjust dimensions dynamically based on heat level
+        const targetRadius = this.baseRadius + this.bounceCount * 3.5;
+        this.radius += (targetRadius - this.radius) * 0.1;
+      }
+
+      draw(c) {
+        c.save();
+        c.translate(this.x, this.y);
+        c.rotate(this.angle);
+
+        if (currentFoodSkin === 'banana') {
+          let peelColor = '#FDE68A';
+          let bodyStroke = '#EAB308';
+          let blushColor = 'transparent';
+
+          if (this.bounceCount === 1) {
+            peelColor = '#FACC15';
+            bodyStroke = '#D97706';
+          } else if (this.bounceCount === 2) {
+            peelColor = '#F59E0B';
+            bodyStroke = '#C2410C';
+            blushColor = 'rgba(239, 68, 68, 0.32)';
+          } else if (this.bounceCount === 3) {
+            peelColor = '#B45309';
+            bodyStroke = '#78350F';
+            blushColor = 'rgba(239, 68, 68, 0.44)';
+          } else if (this.bounceCount >= 4) {
+            peelColor = '#292524';
+            bodyStroke = '#0F172A';
+          }
+
+          const r = this.radius;
+          c.shadowColor = 'rgba(15, 23, 42, 0.2)';
+          c.shadowBlur = 10;
+          c.shadowOffsetY = 5;
+
+          c.beginPath();
+          c.ellipse(0, 0, r * 0.92, r * 0.72, -0.28, 0, Math.PI * 2);
+          c.fillStyle = peelColor;
+          c.fill();
+          c.lineWidth = 2.4;
+          c.strokeStyle = bodyStroke;
+          c.stroke();
+
+          c.shadowBlur = 0;
+          c.shadowOffsetY = 0;
+
+          c.beginPath();
+          c.moveTo(-r * 0.82, r * 0.06);
+          c.quadraticCurveTo(0, -r * 0.72, r * 0.82, -r * 0.08);
+          c.strokeStyle = 'rgba(146, 64, 14, 0.22)';
+          c.lineWidth = 1.4;
+          c.stroke();
+
+          c.beginPath();
+          c.arc(-r * 0.94, r * 0.08, r * 0.1, 0, Math.PI * 2);
+          c.arc(r * 0.94, -r * 0.08, r * 0.1, 0, Math.PI * 2);
+          c.fillStyle = '#7C2D12';
+          c.fill();
+
+          c.fillStyle = 'rgba(255,255,255,0.3)';
+          c.beginPath();
+          c.ellipse(-r * 0.18, -r * 0.34, r * 0.24, r * 0.12, -0.45, 0, Math.PI * 2);
+          c.fill();
+
+          if (blushColor !== 'transparent' && !this.isMelted && this.bounceCount < 4) {
+            c.beginPath();
+            c.arc(-r * 0.34, r * 0.14, r * 0.18, 0, Math.PI * 2);
+            c.arc(r * 0.34, r * 0.14, r * 0.18, 0, Math.PI * 2);
+            c.fillStyle = blushColor;
+            c.fill();
+          }
+
+          if (this.isMelted || this.bounceCount >= 4) {
+            c.beginPath();
+            c.strokeStyle = '#FFFFFF';
+            c.lineWidth = 2;
+            c.moveTo(-r * 0.34, -r * 0.18); c.lineTo(-r * 0.12, 0);
+            c.moveTo(-r * 0.12, -r * 0.18); c.lineTo(-r * 0.34, 0);
+            c.moveTo(r * 0.12, -r * 0.18); c.lineTo(r * 0.34, 0);
+            c.moveTo(r * 0.34, -r * 0.18); c.lineTo(r * 0.12, 0);
+            c.stroke();
+            c.beginPath();
+            c.arc(0, r * 0.26, r * 0.22, Math.PI, 0, false);
+            c.stroke();
+          } else {
+            c.fillStyle = this.bounceCount >= 3 ? '#78350F' : '#0F172A';
+            if (currentFaceSkin === 'cool') {
+              c.fillRect(-r * 0.42, -r * 0.18, r * 0.34, r * 0.18);
+              c.fillRect(r * 0.08, -r * 0.18, r * 0.34, r * 0.18);
+              c.beginPath();
+              c.moveTo(-r * 0.08, -r * 0.1);
+              c.lineTo(r * 0.08, -r * 0.1);
+              c.strokeStyle = '#0F172A';
+              c.lineWidth = 1.8;
+              c.stroke();
+            } else if (currentFaceSkin === 'cute') {
+              c.beginPath();
+              c.arc(-r * 0.26, -r * 0.08, 3.2, 0, Math.PI * 2);
+              c.arc(r * 0.26, -r * 0.08, 3.2, 0, Math.PI * 2);
+              c.fill();
+              c.fillStyle = '#FFFFFF';
+              c.beginPath();
+              c.arc(-r * 0.29, -r * 0.11, 1.1, 0, Math.PI * 2);
+              c.arc(r * 0.23, -r * 0.11, 1.1, 0, Math.PI * 2);
+              c.fill();
+            } else {
+              c.beginPath();
+              c.arc(-r * 0.26, -r * 0.08, 2.4, 0, Math.PI * 2);
+              c.arc(r * 0.26, -r * 0.08, 2.4, 0, Math.PI * 2);
+              c.fill();
+            }
+
+            c.beginPath();
+            c.strokeStyle = '#0F172A';
+            c.lineWidth = 2;
+            if (this.bounceCount === 3) {
+              c.arc(0, r * 0.15, r * 0.22, 0, Math.PI, false);
+              c.fillStyle = '#F43F5E';
+              c.fill();
+              c.stroke();
+            } else {
+              c.arc(0, r * 0.07, r * 0.2, 0.1 * Math.PI, 0.9 * Math.PI, false);
+              c.stroke();
+            }
+
+            if (currentFaceSkin === 'cat') {
+              c.strokeStyle = 'rgba(15, 23, 42, 0.4)';
+              c.lineWidth = 1.3;
+              c.beginPath();
+              c.moveTo(-r * 0.38, r * 0.1); c.lineTo(-r * 0.62, r * 0.06);
+              c.moveTo(-r * 0.38, r * 0.16); c.lineTo(-r * 0.62, r * 0.18);
+              c.moveTo(r * 0.38, r * 0.1); c.lineTo(r * 0.62, r * 0.06);
+              c.moveTo(r * 0.38, r * 0.16); c.lineTo(r * 0.62, r * 0.18);
+              c.stroke();
+            }
+          }
+
+          c.restore();
+          return;
+        }
+
+        // Color blending and outlines based on roast stage
+        let fillStyle = '#FFFFFF';
+        let strokeStyle = '#E2E8F0';
+        let blushColor = 'transparent';
+
+        if (this.bounceCount === 1) { // Stage 1
+          fillStyle = '#FEF08A';
+          strokeStyle = '#FACC15';
+        } else if (this.bounceCount === 2) { // Stage 2
+          fillStyle = '#FB923C';
+          strokeStyle = '#EA580C';
+          blushColor = 'rgba(239, 68, 68, 0.4)';
+        } else if (this.bounceCount === 3) { // Stage 3 Perfect!
+          fillStyle = '#B45309';
+          strokeStyle = '#78350F';
+          blushColor = 'rgba(239, 68, 68, 0.6)';
+        } else if (this.bounceCount >= 4) { // Burnt XL
+          fillStyle = '#1E293B';
+          strokeStyle = '#0F172A';
+        }
+
+        // Capsule layout render
+        c.beginPath();
+        const r = this.radius;
+        if (this.isMelted) {
+          c.arc(0, 0, r, 0, Math.PI, false);
+          c.lineTo(-r, r * 1.5);
+          c.quadraticCurveTo(0, r * 2, r, r * 1.5);
+          c.closePath();
+        } else {
+          c.roundRect(-r, -r * 0.9, r * 2, r * 1.8, r * 0.4);
+        }
+        c.shadowColor = 'rgba(15, 23, 42, 0.22)';
+        c.shadowBlur = 12;
+        c.shadowOffsetY = 5;
+        c.fillStyle = fillStyle;
+        c.fill();
+        c.lineWidth = 2.5;
+        c.strokeStyle = strokeStyle;
+        c.stroke();
+        c.shadowBlur = 0;
+        c.shadowOffsetY = 0;
+
+        if (this.slipperyTimer > 0 && !this.isMelted) {
+          c.strokeStyle = 'rgba(253, 230, 138, 0.85)';
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(r * 0.1, -r * 0.05, r * 0.95, -Math.PI * 0.2, Math.PI * 0.85);
+          c.stroke();
+
+          c.fillStyle = 'rgba(255, 255, 255, 0.42)';
+          c.beginPath();
+          c.ellipse(-r * 0.2, -r * 0.45, r * 0.32, r * 0.16, -0.35, 0, Math.PI * 2);
+          c.fill();
+        }
+
+        // Facial expression render
+        if (this.isMelted || this.bounceCount >= 4) {
+          // Dead face
+          c.beginPath();
+          c.strokeStyle = '#FFFFFF';
+          c.lineWidth = 2;
+          c.moveTo(-r * 0.4, -r * 0.3); c.lineTo(-r * 0.1, -r * 0.1);
+          c.moveTo(-r * 0.1, -r * 0.3); c.lineTo(-r * 0.4, -r * 0.1);
+          c.moveTo(r * 0.1, -r * 0.3); c.lineTo(r * 0.4, -r * 0.1);
+          c.moveTo(r * 0.4, -r * 0.3); c.lineTo(r * 0.1, -r * 0.1);
+          c.stroke();
+          c.beginPath();
+          c.arc(0, r * 0.3, r * 0.25, Math.PI, 0, false);
+          c.stroke();
+        } else {
+          // Normal states
+          if (blushColor !== 'transparent') {
+            c.beginPath();
+            c.arc(-r * 0.4, r * 0.1, r * 0.25, 0, Math.PI * 2);
+            c.arc(r * 0.4, r * 0.1, r * 0.25, 0, Math.PI * 2);
+            c.fillStyle = blushColor;
+            c.fill();
+          }
+
+          // Eyes
+          c.fillStyle = this.bounceCount >= 3 ? '#FACC15' : '#0F172A'; 
+          if (currentFaceSkin === 'cool') {
+            c.fillStyle = '#0F172A';
+            c.fillRect(-r * 0.5, -r * 0.3, r * 0.4, r * 0.25);
+            c.fillRect(r * 0.1, -r * 0.3, r * 0.4, r * 0.25);
+            c.beginPath();
+            c.moveTo(-r * 0.1, -r * 0.2);
+            c.lineTo(r * 0.1, -r * 0.2);
+            c.stroke();
+          } else if (currentFaceSkin === 'cute') {
+            c.beginPath();
+            c.arc(-r * 0.35, -r * 0.15, 3.5, 0, Math.PI * 2);
+            c.arc(r * 0.35, -r * 0.15, 3.5, 0, Math.PI * 2);
+            c.fill();
+            c.fillStyle = '#FFFFFF';
+            c.beginPath();
+            c.arc(-r * 0.38, -r * 0.18, 1.2, 0, Math.PI * 2);
+            c.arc(r * 0.32, -r * 0.18, 1.2, 0, Math.PI * 2);
+            c.fill();
+          } else {
+            c.beginPath();
+            c.arc(-r * 0.35, -r * 0.15, 2.5, 0, Math.PI * 2);
+            c.arc(r * 0.35, -r * 0.15, 2.5, 0, Math.PI * 2);
+            c.fill();
+          }
+
+          // Mouth
+          c.beginPath();
+          c.strokeStyle = '#0F172A';
+          c.lineWidth = 2;
+          if (this.bounceCount === 3) {
+            c.arc(0, r * 0.15, r * 0.25, 0, Math.PI, false);
+            c.fillStyle = '#F43F5E';
+            c.fill();
+            c.stroke();
+          } else {
+            c.arc(0, r * 0.05, r * 0.25, 0.1 * Math.PI, 0.9 * Math.PI, false);
+            c.stroke();
+          }
+
+          // Cat face cheeks whiskers
+          if (currentFaceSkin === 'cat') {
+            c.strokeStyle = 'rgba(15, 23, 42, 0.4)';
+            c.lineWidth = 1.5;
+            c.moveTo(-r * 0.5, r * 0.1); c.lineTo(-r * 0.8, r * 0.05);
+            c.moveTo(-r * 0.5, r * 0.15); c.lineTo(-r * 0.8, r * 0.15);
+            c.moveTo(r * 0.5, r * 0.1); c.lineTo(r * 0.8, r * 0.05);
+            c.moveTo(r * 0.5, r * 0.15); c.lineTo(r * 0.8, r * 0.15);
+            c.stroke();
+          }
+        }
+
+        c.restore();
+      }
+    }
+
+    // 2. Log Obstacle Class
+    class ObstacleLog {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = 1;
+        this.radius = 24;
+        this.gravity = 0.15;
+        this.angle = Math.random() * Math.PI * 2;
+        this.angularVelocity = (Math.random() - 0.5) * 0.04;
+      }
+
+      update() {
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.angle += this.angularVelocity;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        if (this.x - this.radius < 0) {
+          this.x = this.radius;
+          this.vx = -this.vx * 0.6;
+        } else if (this.x + this.radius > canvasRect.width) {
+          this.x = canvasRect.width - this.radius;
+          this.vx = -this.vx * 0.6;
+        }
+      }
+
+      draw(c) {
+        c.save();
+        c.translate(this.x, this.y);
+        c.rotate(this.angle);
+
+        c.beginPath();
+        c.arc(0, 0, this.radius, 0, Math.PI * 2);
+        c.fillStyle = '#78350F';
+        c.fill();
+        c.lineWidth = 3;
+        c.strokeStyle = '#451A03';
+        c.stroke();
+
+        c.beginPath();
+        c.arc(0, 0, this.radius * 0.7, 0, Math.PI * 2);
+        c.arc(0, 0, this.radius * 0.4, 0, Math.PI * 2);
+        c.strokeStyle = '#9A3412';
+        c.lineWidth = 1.5;
+        c.stroke();
+
+        c.fillStyle = '#451A03';
+        c.fillRect(-this.radius, -4, 4, 8);
+        c.fillRect(this.radius - 4, -4, 4, 8);
+
+        c.restore();
+      }
+    }
+
+    // 3. Falling "Fire Spark" Obstacle/Booster Class
+    // [Optimized]: Radius increased to 18 (almost double size), intense yellow/orange dual glow, and beautiful comet trailing tail
+    class Spark {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 2; 
+        this.vy = 0;                         
+        this.radius = 18;                    // Increased from 11 (approx 1.6x size)
+        this.gravity = 0.16;                 
+        this.elasticity = 0.8;               
+        this.angle = Math.random() * Math.PI * 2;
+        this.angularVelocity = (Math.random() - 0.5) * 0.05;
+        this.history = [];                   // Path tracker to render trailing flame embers
+      }
+
+      update() {
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.angle += this.angularVelocity;
+
+        // Push current coordinates to trail array
+        this.history.push({ x: this.x, y: this.y });
+        if (this.history.length > 8) {
+          this.history.shift(); // Constrain tail length
+        }
+      }
+
+      draw(c) {
+        // A. Draw high-fidelity comet-style fire tail trails
+        for (let i = 0; i < this.history.length; i++) {
+          const pos = this.history[i];
+          const ratio = (i + 1) / this.history.length; // Decays over older steps
+          const trailR = this.radius * 0.75 * ratio;
+
+          c.save();
+          c.shadowColor = '#ea580c';
+          c.shadowBlur = 10 * ratio;
+
+          // Outer trail trail circle
+          c.beginPath();
+          c.arc(pos.x, pos.y, trailR, 0, Math.PI * 2);
+          c.fillStyle = `rgba(234, 88, 12, ${ratio * 0.35})`; 
+          c.fill();
+
+          // Inner trail core
+          c.beginPath();
+          c.arc(pos.x, pos.y, trailR * 0.55, 0, Math.PI * 2);
+          c.fillStyle = `rgba(250, 204, 21, ${ratio * 0.55})`; 
+          c.fill();
+          c.restore();
+        }
+
+        // B. Draw current main falling Fire Spark
+        c.save();
+        c.translate(this.x, this.y);
+        c.rotate(this.angle);
+
+        const pulse = Math.sin(performance.now() * 0.015) * 2.5;
+        const r = this.radius + pulse;
+
+        // Extremely vibrant double-pass fire glow (Very bright and distinct)
+        c.shadowColor = '#f97316';
+        c.shadowBlur = 24; 
+
+        // 1. External Teardrop (Outer Crimson/Orange Flame)
+        c.beginPath();
+        c.moveTo(0, -r * 1.3);
+        c.bezierCurveTo(r * 1.25, -r * 0.4, r * 1.25, r, 0, r * 1.25);
+        c.bezierCurveTo(-r * 1.25, r, -r * 1.25, -r * 0.4, 0, -r * 1.3);
+        c.closePath();
+        c.fillStyle = '#ea580c';
+        c.fill();
+
+        // Extra pass for inner glow definition
+        c.shadowColor = '#facc15';
+        c.shadowBlur = 12;
+
+        // 2. Inner Flame Core (Golden Yellow)
+        c.beginPath();
+        const innerR = r * 0.6;
+        c.moveTo(0, -innerR * 1.3);
+        c.bezierCurveTo(innerR * 1.25, -innerR * 0.4, innerR * 1.25, innerR, 0, innerR * 1.25);
+        c.bezierCurveTo(-innerR * 1.25, innerR, -innerR * 1.25, -innerR * 0.4, 0, -innerR * 1.3);
+        c.closePath();
+        c.fillStyle = '#facc15';
+        c.fill();
+
+        // 3. Ultra-Bright center white embers
+        c.beginPath();
+        c.arc(0, r * 0.1, r * 0.28, 0, Math.PI * 2);
+        c.fillStyle = '#ffffff';
+        c.fill();
+
+        c.restore();
+      }
+    }
+
+    class ButterDrop {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 0.8;
+        this.vy = 0;
+        this.radius = 16;
+        this.gravity = 0.14;
+        this.elasticity = 0.68;
+        this.angle = Math.random() * Math.PI * 2;
+        this.angularVelocity = (Math.random() - 0.5) * 0.035;
+      }
+
+      update() {
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.angle += this.angularVelocity;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        if (this.x - this.radius < 0) {
+          this.x = this.radius;
+          this.vx = Math.abs(this.vx) * 0.6;
+        } else if (this.x + this.radius > canvasRect.width) {
+          this.x = canvasRect.width - this.radius;
+          this.vx = -Math.abs(this.vx) * 0.6;
+        }
+      }
+
+      draw(c) {
+        c.save();
+        c.translate(this.x, this.y);
+        c.rotate(this.angle);
+
+        c.shadowColor = 'rgba(251, 191, 36, 0.32)';
+        c.shadowBlur = 12;
+
+        c.fillStyle = '#FDE68A';
+        c.strokeStyle = '#F59E0B';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.roundRect(-12, -10, 24, 20, 6);
+        c.fill();
+        c.stroke();
+
+        c.fillStyle = 'rgba(255,255,255,0.38)';
+        c.beginPath();
+        c.roundRect(-8, -6, 12, 4, 2);
+        c.fill();
+
+        c.restore();
+      }
+    }
+
+    class HeartDrop {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 0.45;
+        this.vy = 0;
+        this.radius = 24;
+        this.gravity = 0.12;
+        this.wobble = Math.random() * Math.PI * 2;
+      }
+
+      update() {
+        this.wobble += 0.08;
+        this.vy += this.gravity;
+        this.x += this.vx + Math.sin(this.wobble) * 0.18;
+        this.y += this.vy;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        if (this.x - this.radius < 0) {
+          this.x = this.radius;
+          this.vx = Math.abs(this.vx) * 0.4;
+        } else if (this.x + this.radius > canvasRect.width) {
+          this.x = canvasRect.width - this.radius;
+          this.vx = -Math.abs(this.vx) * 0.4;
+        }
+      }
+
+      draw(c) {
+        c.save();
+        c.translate(this.x, this.y);
+
+        c.shadowColor = 'rgba(244, 114, 182, 0.38)';
+        c.shadowBlur = 20;
+
+        c.beginPath();
+        c.moveTo(0, 16.5);
+        c.bezierCurveTo(18.7, 2.2, 22, -16.5, 0, -8.8);
+        c.bezierCurveTo(-22, -16.5, -18.7, 2.2, 0, 16.5);
+        c.closePath();
+        c.fillStyle = '#FB7185';
+        c.fill();
+
+        c.fillStyle = 'rgba(255,255,255,0.42)';
+        c.beginPath();
+        c.ellipse(-5.6, -5.4, 6.1, 3.8, -0.5, 0, Math.PI * 2);
+        c.fill();
+
+        c.restore();
+      }
+    }
+
+    // 4. Floating Point Popups Text Class (Removed all emojis)
+    class FloatText {
+      constructor(x, y, text, color = '#FACC15', options = {}) {
+        this.text = text;
+        this.color = color;
+        const toastPattern = /^(Warming Up!|Nice!|Hot Streak!|Too Raw!|Burnt!|Slippery!|Butter Boost!|So close!|One bounce too many!|S'more Streak!|\+1 Life!)$/;
+        this.mode = options.mode || (toastPattern.test(text) ? 'toast' : 'popup');
+        this.maxLife = options.life || (this.mode === 'toast' ? 48 : this.mode === 'score' ? 30 : 50);
+        this.life = this.maxLife;
+        this.x = this.mode === 'toast' ? campfireX : x;
+        this.y = this.mode === 'toast' ? fireY - 58 : y;
+        this.vy = this.mode === 'toast' ? 0 : this.mode === 'score' ? -0.95 : -1.2;
+      }
+
+      update() {
+        this.life--;
+        this.y += this.vy;
+      }
+
+      draw(c) {
+        if (this.life <= 0) return;
+        c.save();
+        const progress = 1 - this.life / this.maxLife;
+        let alpha = 1;
+        let scale = 1;
+
+        if (this.mode === 'toast') {
+          if (progress < 0.1875) {
+            const t = progress / 0.1875;
+            alpha = t;
+            scale = 0.9 + t * 0.15;
+          } else if (progress < 0.3125) {
+            const t = (progress - 0.1875) / 0.125;
+            alpha = 1;
+            scale = 1.05 - t * 0.05;
+          } else if (progress > 0.8125) {
+            const t = (progress - 0.8125) / 0.1875;
+            alpha = Math.max(0, 1 - t);
+            scale = 1 - t * 0.02;
+          }
+        } else if (this.mode === 'score') {
+          if (progress < 0.2) {
+            alpha = progress / 0.2;
+            scale = 0.92 + (progress / 0.2) * 0.16;
+          } else if (progress > 0.72) {
+            alpha = Math.max(0, 1 - (progress - 0.72) / 0.28);
+            scale = 1.04 - ((progress - 0.72) / 0.28) * 0.08;
+          } else {
+            scale = 1.04 - ((progress - 0.2) / 0.52) * 0.04;
+          }
+        } else {
+          alpha = Math.max(0, 1 - progress);
+          scale = 1 + Math.sin(progress * Math.PI) * 0.02;
+        }
+
+        c.globalAlpha = alpha;
+        c.translate(this.x, this.y);
+        c.scale(scale, scale);
+        c.font = this.mode === 'toast' ? '800 15px sans-serif' : this.mode === 'score' ? '900 17px sans-serif' : 'black 16px sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        if (this.mode === 'toast') {
+          const metrics = c.measureText(this.text);
+          const boxWidth = metrics.width + 22;
+          const boxHeight = 26;
+          c.fillStyle = 'rgba(15, 23, 42, 0.34)';
+          c.beginPath();
+          c.roundRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, 13);
+          c.fill();
+          c.shadowColor = 'rgba(0, 0, 0, 0.2)';
+          c.shadowBlur = 10;
+        } else if (this.mode === 'score') {
+          c.shadowColor = 'rgba(251, 191, 36, 0.36)';
+          c.shadowBlur = 14;
+        } else {
+          c.shadowColor = 'rgba(0, 0, 0, 0.5)';
+          c.shadowBlur = 4;
+        }
+        c.fillStyle = this.color;
+        c.fillText(this.text, 0, 0);
+        c.restore();
+      }
+    }
+
+    // 5. Ambient Spark / Embers Particle Class (Reserved for scenery/atmosphere)
+    class Particle {
+      constructor(x, y, vx, vy, color, size, life) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.size = size;
+        this.maxLife = life;
+        this.life = life;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life--;
+      }
+
+      draw(c) {
+        const alpha = this.life / this.maxLife;
+        c.save();
+        c.globalAlpha = alpha;
+        c.beginPath();
+        c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        c.fillStyle = this.color;
+        c.fill();
+        c.restore();
+      }
+    }
+
+    class HeartParticle {
+      constructor(x, y, vx, vy, color, size, life) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.size = size;
+        this.maxLife = life;
+        this.life = life;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life--;
+      }
+
+      draw(c) {
+        const alpha = this.life / this.maxLife;
+        const r = this.size;
+        c.save();
+        c.globalAlpha = alpha;
+        c.translate(this.x, this.y);
+        c.beginPath();
+        c.moveTo(0, r);
+        c.bezierCurveTo(r * 1.2, r * 0.2, r * 1.35, -r, 0, -r * 0.45);
+        c.bezierCurveTo(-r * 1.35, -r, -r * 1.2, r * 0.2, 0, r);
+        c.closePath();
+        c.fillStyle = this.color;
+        c.fill();
+        c.restore();
+      }
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    // --- Circle vs Line Segment Collision Physics Solver ---
+    function resolveCollisionCircleVsLine(circle, line) {
+      const ax = circle.x - line.x1;
+      const ay = circle.y - line.y1;
+
+      const bx = line.x2 - line.x1;
+      const by = line.y2 - line.y1;
+
+      const lenSq = bx * bx + by * by;
+      if (lenSq === 0) return;
+
+      let t = (ax * bx + ay * by) / lenSq;
+      t = Math.max(0, Math.min(1, t)); 
+
+      const cx = line.x1 + t * bx;
+      const cy = line.y1 + t * by;
+
+      const dx = circle.x - cx;
+      const dy = circle.y - cy;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < circle.radius) {
+        const nx = dx / (distance || 1);
+        const ny = dy / (distance || 1);
+
+        circle.x = cx + nx * circle.radius;
+        circle.y = cy + ny * circle.radius;
+
+        const dot = circle.vx * nx + circle.vy * ny;
+        if (dot < 0) { 
+          let elasticity = circle.elasticity || 0.8;
+          if (circle.slipperyBounceBoost) {
+            elasticity = Math.min(1.02, elasticity + 0.12);
+            circle.slipperyBounceBoost = false;
+          }
+          circle.vx = circle.vx - 2 * dot * nx;
+          circle.vy = (circle.vy - 2 * dot * ny) * elasticity;
+
+          if (skewerButterTimer > 0) {
+            circle.vx = clamp(circle.vx * SKEWER_BUTTER_BOUNCE_MULTIPLIER, -8, 8);
+            circle.vy = clamp(circle.vy * SKEWER_BUTTER_BOUNCE_MULTIPLIER, -11, 11);
+          }
+
+          for (let i = 0; i < 6; i++) {
+            particles.push(new Particle(
+              cx, cy,
+              (Math.random() - 0.5) * 4,
+              (Math.random() - 0.5) * 4,
+              line.skin === 'emerald' ? '#34D399' : (line.skin === 'cosmic' ? '#F472B6' : '#FBBF24'),
+              Math.random() * 3 + 1,
+              25
+            ));
+          }
+
+          return true; 
+        }
+      }
+      return false;
+    }
+
+    function isCircleTouchingLine(circle, line) {
+      const ax = circle.x - line.x1;
+      const ay = circle.y - line.y1;
+      const bx = line.x2 - line.x1;
+      const by = line.y2 - line.y1;
+      const lenSq = bx * bx + by * by;
+      if (lenSq === 0) return false;
+
+      let t = (ax * bx + ay * by) / lenSq;
+      t = Math.max(0, Math.min(1, t));
+
+      const cx = line.x1 + t * bx;
+      const cy = line.y1 + t * by;
+      const dx = circle.x - cx;
+      const dy = circle.y - cy;
+      return Math.sqrt(dx * dx + dy * dy) < circle.radius + 4.5;
+    }
+
+    // 新增: 处理棉花糖和固定弧形板的反弹碰撞函数
+    function resolveCollisionCircleVsArc(m, options = {}) {
+      const playSound = options.sound ?? true;
+      const particleColor = options.particleColor ?? '#9a6136';
+      const particleCount = options.particleCount ?? 6;
+      const cx = stick.pivotX;
+      const cy = stick.pivotY;
+      const r = arcBumper.radius; // 半径
+      const halfThickness = arcBumper.thickness / 2; // 厚度的一半
+
+      // 计算从圆弧中心 to 棉花糖中心的向量
+      const dx = m.x - cx;
+      const dy = m.y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist === 0) return false;
+
+      // 寻找棉花糖相对于圆弧中心的极坐标角度 [-PI, PI]
+      let angle = Math.atan2(dy, dx);
+
+      // 弧形板是一个 "∩" 形状，对应的角度范围为上半圆 [-PI, 0]
+      // 夹角法计算：如果夹角超出该范围（即处于下半圆），将其向最近的端点（0 或 -PI）靠拢夹紧
+      let clampedAngle;
+      if (angle < 0) {
+        clampedAngle = angle;
+      } else {
+        clampedAngle = (angle < Math.PI / 2) ? 0 : -Math.PI;
+      }
+
+      // 圆弧中轴线上最靠近棉花糖的点 (px, py)
+      const px = cx + r * Math.cos(clampedAngle);
+      const py = cy + r * Math.sin(clampedAngle);
+
+      // 棉花糖到此最近点的距离 pdx, pdy
+      const pdx = m.x - px;
+      const pdy = m.y - py;
+      const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+
+      // 碰撞判定半径
+      const minDist = m.radius + halfThickness;
+
+      if (pdist < minDist) {
+        // 碰撞成立，计算法向量
+        const nx = pdx / (pdist || 1);
+        const ny = pdy / (pdist || 1);
+
+        // 沿碰撞法线将棉花糖推出碰撞体边界
+        m.x = px + nx * minDist;
+        m.y = py + ny * minDist;
+
+        // 反弹速度计算
+        const dot = m.vx * nx + m.vy * ny;
+        if (dot < 0) {
+          const elasticity = m.elasticity || 0.85;
+          m.vx = m.vx - 2 * dot * nx;
+          m.vy = (m.vy - 2 * dot * ny) * elasticity;
+
+          if (playSound) {
+            sound.playBounce(m.bounceCount || 1);
+          }
+
+          // 爆散木质木屑微粒氛围特效 (棕色系列微粒)
+          for (let k = 0; k < particleCount; k++) {
+            particles.push(new Particle(
+              px, py,
+              (Math.random() - 0.5) * 3,
+              (Math.random() - 0.5) * 3,
+              particleColor, 
+              Math.random() * 2 + 1,
+              18
+            ));
+          }
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // 新增: 绘制木质粗弧形反弹板函数 (不随木签旋转)
+    function drawArcBumper() {
+      ctx.save();
+      const cx = stick.pivotX;
+      const cy = stick.pivotY;
+      const r = arcBumper.radius;
+
+      // 1. 粗木质拱板底座
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, arcBumper.startAngle, arcBumper.endAngle, false);
+      ctx.strokeStyle = 'rgba(92, 62, 34, 0.62)';
+      ctx.lineWidth = arcBumper.thickness;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // 2. 浅色高亮木纹高光弧
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, arcBumper.startAngle, arcBumper.endAngle, false);
+      ctx.strokeStyle = 'rgba(160, 124, 86, 0.34)'; 
+      ctx.lineWidth = arcBumper.thickness * 0.4;
+      ctx.stroke();
+
+      // 3. 深色硬质原木轮廓线 (内外双边缘，增加手绘质感)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + arcBumper.thickness / 2, arcBumper.startAngle, arcBumper.endAngle, false);
+      ctx.strokeStyle = 'rgba(58, 35, 15, 0.48)'; 
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - arcBumper.thickness / 2, arcBumper.startAngle, arcBumper.endAngle, false);
+      ctx.strokeStyle = 'rgba(58, 35, 15, 0.48)'; 
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 4. 微弱的原木同心圆弧年轮肌理
+      ctx.strokeStyle = 'rgba(76, 45, 17, 0.18)';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 2.5, arcBumper.startAngle + 0.15, arcBumper.endAngle - 0.15, false);
+      ctx.arc(cx, cy, r + 2.5, arcBumper.startAngle + 0.25, arcBumper.endAngle - 0.25, false);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // --- Ambient Backdrop & Campfire Render Passes ---
+    function drawBackground() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      ctx.fillStyle = '#121824';
+      ctx.fillRect(0, 0, w, h);
+
+      if (!backgroundImage.complete || !backgroundImage.naturalWidth) {
+        return;
+      }
+
+      const imageRatio = backgroundImage.naturalWidth / backgroundImage.naturalHeight;
+      const canvasRatio = w / h;
+      let drawWidth;
+      let drawHeight;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (imageRatio > canvasRatio) {
+        drawHeight = h;
+        drawWidth = h * imageRatio;
+        offsetX = (w - drawWidth) / 2;
+      } else {
+        drawWidth = w;
+        drawHeight = w / imageRatio;
+        offsetY = (h - drawHeight) / 2;
+      }
+
+      ctx.drawImage(backgroundImage, offsetX, offsetY, drawWidth, drawHeight);
+    }
+
+    // 绘制可自由旋转、伸缩的烘烤木签
+    function drawInteractiveSkewer() {
+      // A. 绘制中心固定支座铆钉
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      
+      ctx.beginPath();
+      ctx.arc(stick.pivotX, stick.pivotY, 11, 0, Math.PI * 2);
+      ctx.fillStyle = '#2d3a4d';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2.5;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(stick.pivotX, stick.pivotY, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ca8a04'; 
+      ctx.fill();
+      ctx.restore();
+
+      // B. 绘制木签主体，朝向 angle 角度旋转
+      ctx.save();
+      ctx.translate(stick.pivotX, stick.pivotY);
+      ctx.rotate(stick.angle);
+
+      const isButterBoosted = skewerButterTimer > 0;
+      const butterGlowStrength = !isButterBoosted
+        ? 0
+        : (skewerButterTimer > SKEWER_BUTTER_DURATION / 2
+          ? 1
+          : Math.max(0.22, skewerButterTimer / (SKEWER_BUTTER_DURATION / 2)));
+      let glowColor = 'rgba(251, 191, 36, 0.45)';
+      let themeColor = '#f59e0b';
+      let skewerFillColor = '#9a6136';
+      let skewerStrokeColor = '#4c260d';
+      let grainColor = 'rgba(76, 38, 13, 0.45)';
+      let tipCenterColor = 'rgba(255, 255, 255, 0.95)';
+      if (currentLineSkin === 'emerald') {
+        glowColor = 'rgba(16, 185, 129, 0.45)';
+        themeColor = '#10b981';
+      } else if (currentLineSkin === 'cosmic') {
+        glowColor = 'rgba(217, 70, 239, 0.45)';
+        themeColor = '#d946ef';
+      } else if (currentLineSkin === 'rainbow') {
+        const cycle = (performance.now() / 1200) % 1;
+        glowColor = `hsla(${cycle * 360}, 90%, 60%, 0.45)`;
+        themeColor = `hsla(${cycle * 360}, 90%, 60%, 1)`;
+      }
+
+      if (isButterBoosted) {
+        glowColor = `rgba(250, 204, 21, ${0.16 + butterGlowStrength * 0.29})`;
+        themeColor = '#FACC15';
+        skewerFillColor = '#FDE68A';
+        skewerStrokeColor = '#F59E0B';
+        grainColor = 'rgba(217, 119, 6, 0.42)';
+        tipCenterColor = '#FFF7D6';
+      }
+
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = isButterBoosted ? 8 + butterGlowStrength * 10 : 14;
+
+      ctx.fillStyle = skewerFillColor; 
+      ctx.strokeStyle = skewerStrokeColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(0, -4.5, stick.length, 9, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = grainColor;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(12, -1.8); ctx.lineTo(stick.length - 15, -1.8);
+      ctx.moveTo(25, 1.8); ctx.lineTo(stick.length - 25, 1.8);
+      ctx.stroke();
+
+      // 绘制交互指示波纹
+      ctx.beginPath();
+      ctx.arc(stick.length, 0, 11, 0, Math.PI * 2);
+      ctx.fillStyle = themeColor;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.4;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(stick.length, 0, 3.2, 0, Math.PI * 2);
+      ctx.fillStyle = tipCenterColor;
+      ctx.fill();
+
+      if (isButterBoosted) {
+        ctx.beginPath();
+        ctx.arc(stick.length, 0, 6.4, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 247, 214, ${0.28 + butterGlowStrength * 0.44})`;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+      }
+
+      const pulseRadius = 16 + Math.sin(performance.now() * 0.01) * 4.5;
+      ctx.beginPath();
+      ctx.arc(stick.length, 0, pulseRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = glowColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 绘制烤炉区域内的轻提示，不再额外叠加旧篝火/石头/木柴视觉
+    function drawCampfire() {
+      const hintText = 'Drag the skewer to bounce!';
+      const hintY = fireY + 18;
+
+      ctx.save();
+      ctx.font = '600 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const metrics = ctx.measureText(hintText);
+      const boxWidth = metrics.width + 26;
+      const boxHeight = 22;
+      const boxX = campfireX - boxWidth / 2;
+      const boxY = hintY - boxHeight / 2;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 12);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
+      ctx.fillText(hintText, campfireX, hintY + 0.5);
+      ctx.restore();
+    }
+
+    // --- 游戏新手教学定格弹窗显示控制器 ---
+    function triggerIntroAlert(type, onComplete) {
+      isGamePausedForAlert = true;
+      const overlayMap = {
+        log: 'log-alert-overlay',
+        spark: 'spark-alert-overlay',
+        butter: 'butter-alert-overlay'
+      };
+      const overlay = document.getElementById(overlayMap[type] || 'log-alert-overlay');
+      overlay.classList.remove('hidden', 'is-hiding');
+      requestAnimationFrame(() => overlay.classList.add('is-visible'));
+      
+      sound.playSizzle(); 
+
+      setTimeout(() => {
+        overlay.classList.remove('is-visible');
+        overlay.classList.add('is-hiding');
+
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('is-hiding');
+          isGamePausedForAlert = false;
+          if (onComplete) onComplete();
+        }, 160);
+      }, 1350);
+    }
+
+    // --- 关卡与状态控制器 (FontAwesome 动态心形生命) ---
+    function setHearts(count) {
+      count = Math.max(0, Math.min(3, count));
+      lives = count;
+      let heartsHtml = '';
+      for (let i = 0; i < 3; i++) {
+        if (i < count) {
+          heartsHtml += '<i class="fa-solid fa-heart mx-0.5 text-rose-500"></i>';
+        } else {
+          heartsHtml += '<i class="fa-regular fa-heart mx-0.5 text-slate-500"></i>';
+        }
+      }
+      heartsContainer.innerHTML = heartsHtml.trim();
+    }
+
+    // 初始化关卡数据
+    function initLevel(levelNum) {
+      currentLevel = levelNum;
+      marshmallows.length = 0;
+      obstacles.length = 0;
+      sparks.length = 0; 
+      butterDrops.length = 0;
+      heartDrops.length = 0;
+      score = 0; 
+      scoreDisplay.textContent = 0; 
+      shopCoins.textContent = 0;
+      levelTimeElapsed = 0; 
+      obstacleSpawnTimer = 0;
+      sparkSpawnTimer = 0;
+      butterSpawnTimer = 0;
+      butterNextSpawnDelay = 6000;
+      heartSpawnTimer = 0;
+      heartNextSpawnDelay = getHeartSpawnDelay();
+      skewerButterTimer = 0;
+      perfectStreak = 0;
+      hasShownDropGuide = false;
+      dragGuideText.textContent = 'Drag to bounce!';
+      if (dragGuideTimeout) clearTimeout(dragGuideTimeout);
+      dragGuide.classList.remove('is-visible');
+      dragGuide.classList.add('hidden');
+      
+      if (levelNum === 1) {
+        levelIndicator.textContent = "Level 1: Camp Rookie";
+        setHearts(3);
+        hasShownLogAlert = false;
+        hasShownSparkAlert = false;
+        hasShownButterAlert = false;
+      } else {
+        levelIndicator.textContent = "Level 2: Campfire Party";
+        setHearts(3);
+        hasShownLogAlert = false;
+        hasShownSparkAlert = false;
+        hasShownButterAlert = false;
+      }
+    }
+
+    // 新增/补全: 游戏结束和通关控制函数，修复 ReferenceError 报错
+    function triggerGameOver() {
+      gameActive = false;
+      document.getElementById('final-score').textContent = score; 
+      finalRank.textContent = getRankLabel(score);
+      shareLine.textContent = `Better than ${getPercentile(score)}%`;
+      challengeLine.textContent = 'Beat me?';
+      shareBtn.textContent = 'Copy';
+      gameoverOverlay.classList.remove('hidden');
+    }
+
+    function triggerLevelClear() {
+      gameActive = false;
+      levelclearOverlay.classList.remove('hidden');
+    }
+
+    function getRankLabel(value) {
+      if (value <= 5) return 'Camp Rookie';
+      if (value <= 12) return 'Marshmallow Taster';
+      if (value <= 20) return 'Perfect Roaster';
+      return 'Campfire Legend';
+    }
+
+    function getPercentile(value) {
+      return Math.min(97, 61 + value * 2);
+    }
+
+    function buildShareText() {
+      return `I scored ${score} in Perfect Roast. Can you beat me?`;
+    }
+
+    function updateScoreDisplay(nextScore) {
+      scoreDisplay.textContent = nextScore;
+      shopCoins.textContent = nextScore;
+      scoreDisplay.classList.remove('score-bump');
+      void scoreDisplay.offsetWidth;
+      scoreDisplay.classList.add('score-bump');
+    }
+
+    function emitCelebrationBurst(x, y, count = 8) {
+      const colors = ['#FBBF24', '#F59E0B', '#FDE68A', '#FFFFFF'];
+      for (let i = 0; i < count; i++) {
+        particles.push(new Particle(
+          x + (Math.random() - 0.5) * 16,
+          y + (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 2.4,
+          -Math.random() * 2.6 - 0.2,
+          colors[i % colors.length],
+          Math.random() * 2.2 + 1,
+          24
+        ));
+      }
+    }
+
+    function showScoreBurst(x, y, amount, label = 'PERFECT') {
+      floatTexts.push(new FloatText(x, y - 22, `${label}! +${amount}`, amount >= 3 ? '#FBBF24' : '#FB923C', {
+        mode: 'score',
+        life: 30
+      }));
+      updateScoreDisplay(score);
+      emitCelebrationBurst(x, y - 10, 10);
+      if (navigator.vibrate) {
+        navigator.vibrate(20);
+      }
+    }
+
+    function maybeShowBurntToast(m) {
+      if (m.hasShownBurntToast || Math.random() >= 0.45) return;
+      m.hasShownBurntToast = true;
+      floatTexts.push(new FloatText(0, 0, 'One bounce too many!', '#FB923C', {
+        mode: 'toast',
+        life: 44
+      }));
+    }
+
+    function maybeShowSmoreStreak(x, y) {
+      if (perfectStreak > 0 && perfectStreak % 3 === 0) {
+        floatTexts.push(new FloatText(0, 0, "S'more Streak!", '#FBBF24', {
+          mode: 'toast',
+          life: 46
+        }));
+        emitCelebrationBurst(x, y - 14, 6);
+      }
+    }
+
+    function emitHeartBurst(x, y, count = 6) {
+      const colors = ['#FB7185', '#F472B6', '#FDA4AF', '#FFE4E6'];
+      for (let i = 0; i < count; i++) {
+        particles.push(new HeartParticle(
+          x + (Math.random() - 0.5) * 10,
+          y + (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 1.8,
+          -Math.random() * 1.8 - 0.2,
+          colors[i % colors.length],
+          Math.random() * 2 + 1.4,
+          22
+        ));
+      }
+    }
+
+    function getHeartSpawnDelay() {
+      return 18000 + Math.random() * 10000;
+    }
+
+    function positionDragGuide(x = stick.targetX, y = stick.targetY - 26) {
+      dragGuide.style.left = `${x}px`;
+      dragGuide.style.top = `${y}px`;
+    }
+
+    function showGuide(text, x = stick.targetX, y = stick.targetY - 26) {
+      dragGuideText.textContent = text;
+      positionDragGuide(x, y);
+      dragGuide.classList.remove('is-visible');
+      dragGuide.classList.remove('hidden');
+      requestAnimationFrame(() => dragGuide.classList.add('is-visible'));
+
+      if (dragGuideTimeout) clearTimeout(dragGuideTimeout);
+      dragGuideTimeout = setTimeout(() => {
+        dragGuide.classList.remove('is-visible');
+        setTimeout(() => dragGuide.classList.add('hidden'), 220);
+      }, 1200);
+    }
+
+    function showDragGuideOnce() {
+      showGuide('Drag to bounce!');
+    }
+
+    function showDropGuide(m) {
+      const rect = canvas.getBoundingClientRect();
+      const guideX = Math.max(84, Math.min(rect.width - 84, m.x + 54));
+      const guideY = Math.max(56, m.y - 44);
+      showGuide('Golden! Drop!', guideX, guideY);
+    }
+
+    function awardSecondBounceScore(m) {
+      if (m.bounceCount !== 2 || m.hasScoredSecondBounce) return false;
+
+      m.hasScoredSecondBounce = true;
+      score += 1;
+      updateScoreDisplay(score);
+      floatTexts.push(new FloatText(m.x, m.y - 20, 'Nice! +1', '#FBBF24', {
+        mode: 'score',
+        life: 28
+      }));
+
+      for (let k = 0; k < 5; k++) {
+        particles.push(new Particle(
+          m.x + (Math.random() - 0.5) * 12,
+          m.y - 8 + (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 1.9,
+          -Math.random() * 1.8 - 0.2,
+          k % 2 === 0 ? '#FBBF24' : '#FDE68A',
+          Math.random() * 1.8 + 0.8,
+          18
+        ));
+      }
+
+      return true;
+    }
+
+    async function handleShareResult() {
+      const shareText = buildShareText();
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareText);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = shareText;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          document.execCommand('copy');
+          textarea.remove();
+        }
+        shareBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          shareBtn.textContent = 'Copy';
+        }, 1100);
+      } catch {
+        shareBtn.textContent = 'Copy';
+      }
+    }
+
+    // --- Main Game Loop ---
+    function gameLoop(now) {
+      requestAnimationFrame(gameLoop);
+      const deltaTime = now - lastTime;
+      lastTime = now;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 渲染精致露营背景
+      drawBackground();
+
+      // 新增: 在木签下层绘制固定的木质“∩”形反弹板 (高层被木签铆钉盖住，视觉极佳)
+      drawArcBumper();
+
+      // 渲染可拖动可旋转的木签 (在首登场暂停时木签也可以旋转控制)
+      drawInteractiveSkewer();
+
+      if (!gameActive) {
+        drawCampfire();
+        return;
+      }
+
+      // 如果在新障碍物登场弹窗暂停中，静止定格画面
+      if (isGamePausedForAlert) {
+        obstacles.forEach(obs => obs.draw(ctx));
+        sparks.forEach(spk => spk.draw(ctx));
+        butterDrops.forEach(drop => drop.draw(ctx));
+        heartDrops.forEach(drop => drop.draw(ctx));
+        marshmallows.forEach(m => m.draw(ctx));
+        particles.forEach(p => p.draw(ctx));
+        floatTexts.forEach(ft => ft.draw(ctx));
+        drawCampfire();
+        return; 
+      }
+
+      levelTimeElapsed += deltaTime;
+      if (skewerButterTimer > 0) {
+        const butterGlowStrength = skewerButterTimer > SKEWER_BUTTER_DURATION / 2
+          ? 1
+          : Math.max(0.22, skewerButterTimer / (SKEWER_BUTTER_DURATION / 2));
+        skewerButterTimer--;
+        if (Math.random() < 0.05 + butterGlowStrength * 0.12) {
+          particles.push(new Particle(
+            stick.targetX + (Math.random() - 0.5) * 12,
+            stick.targetY + (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 0.8,
+            -Math.random() * 0.8,
+            Math.random() < 0.5 ? '#FDE68A' : '#FACC15',
+            Math.random() * 1.4 + 0.8,
+            14
+          ));
+        }
+      }
+
+      // 1. 棉花糖自动掉落生成器（随 Score 阶梯变档加速）
+      spawnTimer += deltaTime;
+      let baseSpawnInterval = 4000;
+      if (currentLevel === 1) {
+        if (score <= 2) {
+          baseSpawnInterval = 6500; // 初始超慢速，极易入门
+        } else if (score <= 5) {
+          baseSpawnInterval = 4500; 
+        } else {
+          baseSpawnInterval = 3200; 
+        }
+      } else {
+        if (score <= 2) {
+          baseSpawnInterval = 4500; 
+        } else if (score <= 5) {
+          baseSpawnInterval = 2800; 
+        } else {
+          baseSpawnInterval = 1800; 
+        }
+      }
+
+      if (spawnTimer >= baseSpawnInterval) {
+        spawnTimer = 0;
+        if (currentLevel === 1 && marshmallows.length >= 1) {
+          // 教程关防过载
+        } else {
+          const rect = canvas.getBoundingClientRect();
+          const spawnRange = Math.min(rect.width * 0.22, 78);
+          const spawnX = campfireX + (Math.random() - 0.5) * spawnRange * 2;
+          const spawnY = -30;
+          marshmallows.push(new Marshmallow(spawnX, spawnY));
+        }
+      }
+
+      // 2. 木柴障碍物下落生成器 (Level 2 开局 10 秒后开始)
+      if (currentLevel === 2 && levelTimeElapsed >= 10000) {
+        obstacleSpawnTimer += deltaTime;
+        if (obstacleSpawnTimer >= 5500) {
+          obstacleSpawnTimer = 0;
+          
+          const spawnLogFunc = () => {
+            const rect = canvas.getBoundingClientRect();
+            const spawnX = 60 + Math.random() * (rect.width - 120);
+            obstacles.push(new ObstacleLog(spawnX, -40));
+          };
+
+          // 首次登场短提示卡
+          if (!hasShownLogAlert) {
+            hasShownLogAlert = true;
+            triggerIntroAlert('log', spawnLogFunc);
+          } else {
+            spawnLogFunc();
+          }
+        }
+      }
+
+      // 3. 下落火星元素生成器 (Level 2 开启 10 秒后，且分数 >= 9 时下落)
+      if (currentLevel === 2 && score >= 9 && levelTimeElapsed >= 10000) {
+        sparkSpawnTimer += deltaTime;
+        if (sparkSpawnTimer >= 3500) { 
+          sparkSpawnTimer = 0;
+          
+          const spawnSparkFunc = () => {
+            const rect = canvas.getBoundingClientRect();
+            const spawnX = 50 + Math.random() * (rect.width - 100);
+            sparks.push(new Spark(spawnX, -30));
+          };
+
+          // 首次登场提示卡
+          if (!hasShownSparkAlert) {
+            hasShownSparkAlert = true;
+            butterSpawnTimer = 0;
+            butterNextSpawnDelay = 5000 + Math.random() * 3000;
+            triggerIntroAlert('spark', spawnSparkFunc);
+          } else {
+            spawnSparkFunc();
+          }
+        }
+      }
+
+      // 4. Butter Drop 生成器 (Spark 首次出现之后才允许，首次建议晚 5-8 秒)
+      if (currentLevel === 2 && hasShownSparkAlert === true && levelTimeElapsed >= 18000) {
+        butterSpawnTimer += deltaTime;
+        if (butterSpawnTimer >= butterNextSpawnDelay && butterDrops.length < 1) {
+          const spawnButterFunc = () => {
+            const rect = canvas.getBoundingClientRect();
+            const spawnX = 55 + Math.random() * (rect.width - 110);
+            butterDrops.push(new ButterDrop(spawnX, -34));
+            butterSpawnTimer = 0;
+            butterNextSpawnDelay = 8000 + Math.random() * 4000;
+          };
+
+          if (!hasShownButterAlert) {
+            hasShownButterAlert = true;
+            triggerIntroAlert('butter', spawnButterFunc);
+          } else {
+            spawnButterFunc();
+          }
+        }
+      }
+
+      if (currentLevel === 2 && lives < 3 && heartDrops.length < 1) {
+        heartSpawnTimer += deltaTime;
+        if (heartSpawnTimer >= heartNextSpawnDelay) {
+          const rect = canvas.getBoundingClientRect();
+          const spawnX = 60 + Math.random() * (rect.width - 120);
+          heartDrops.push(new HeartDrop(spawnX, -36));
+          heartSpawnTimer = 0;
+          heartNextSpawnDelay = getHeartSpawnDelay();
+        }
+      }
+
+      // 映射木签坐标以执行线段碰撞
+      const collidableSkewerLine = {
+        x1: stick.pivotX,
+        y1: stick.pivotY,
+        x2: stick.targetX,
+        y2: stick.targetY,
+        skin: currentLineSkin
+      };
+
+      // B. 木头障碍物理碰撞
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.update();
+        obs.draw(ctx);
+        
+        resolveCollisionCircleVsLine(obs, collidableSkewerLine);
+
+        if (obs.y - obs.radius > fireY + 120) {
+          obstacles.splice(i, 1);
+        }
+      }
+
+      // C. 物理火元素下落物更新与碰撞
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const spk = sparks[i];
+        spk.update();
+        spk.draw(ctx);
+
+        // 碰撞木签：弹性反弹
+        resolveCollisionCircleVsLine(spk, collidableSkewerLine);
+
+        // 碰撞棉花糖：瞬间融化并给棉花糖热度 +1 档
+        let sparkExtinguished = false;
+        for (let j = marshmallows.length - 1; j >= 0; j--) {
+          const m = marshmallows[j];
+          if (m.isMelted) continue;
+
+          const dx = m.x - spk.x;
+          const dy = m.y - spk.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < m.radius + spk.radius) {
+            m.bounceCount++; 
+            sound.playBounce(m.bounceCount);
+            
+            floatTexts.push(new FloatText(m.x, m.y - 15, "Hot Streak!", "#f97316"));
+
+            // 爆散火焰火花
+            for (let k = 0; k < 10; k++) {
+              particles.push(new Particle(
+                spk.x, spk.y,
+                (Math.random() - 0.5) * 5,
+                (Math.random() - 0.5) * 5,
+                '#f97316',
+                Math.random() * 2.2 + 1,
+                22
+              ));
+            }
+
+            if (m.bounceCount >= 4) {
+              m.isMelted = true;
+              perfectStreak = 0;
+              floatTexts.push(new FloatText(m.x, m.y - 15, "Burnt!", "#EF4444"));
+              maybeShowBurntToast(m);
+              sound.playBounce(4);
+              if (!m.hasLostLife) {
+                m.hasLostLife = true;
+                m.isMelted = true;
+                setHearts(Math.max(0, lives - 1));
+              }
+              if (lives === 0) {
+                triggerGameOver();
+              }
+            } else {
+              const texts = ["Warming Up!", "Nice!", "Hot Streak!"];
+              const colors = ["#FEF08A", "#FB923C", "#FBBF24"];
+              floatTexts.push(new FloatText(
+                m.x, m.y - 30, 
+                texts[m.bounceCount - 1], 
+                colors[m.bounceCount - 1]
+              ));
+            }
+
+            sparkExtinguished = true;
+            break;
+          }
+        }
+
+        if (sparkExtinguished) {
+          sparks.splice(i, 1);
+          continue;
+        }
+
+        if (spk.y - spk.radius > fireY + 120) {
+          sparks.splice(i, 1);
+        }
+      }
+
+      // D. Butter Drop 更新与碰撞
+      for (let i = butterDrops.length - 1; i >= 0; i--) {
+        const butter = butterDrops[i];
+        butter.update();
+        if (isCircleTouchingLine(butter, collidableSkewerLine)) {
+          skewerButterTimer = SKEWER_BUTTER_DURATION;
+          floatTexts.push(new FloatText(0, 0, 'Butter Boost!', '#FDE68A', {
+            mode: 'toast',
+            life: 48
+          }));
+          for (let k = 0; k < 8; k++) {
+            particles.push(new Particle(
+              butter.x, butter.y,
+              (Math.random() - 0.5) * 2.4,
+              (Math.random() - 0.5) * 2.4,
+              k % 2 === 0 ? '#FDE68A' : '#FACC15',
+              Math.random() * 1.8 + 0.8,
+              18
+            ));
+          }
+          butterDrops.splice(i, 1);
+          continue;
+        }
+        resolveCollisionCircleVsArc(butter, {
+          sound: false,
+          particleColor: '#FDE68A',
+          particleCount: 4
+        });
+        butter.draw(ctx);
+
+        if (butter.y - butter.radius > fireY + 120) {
+          butterDrops.splice(i, 1);
+        }
+      }
+
+      for (let i = heartDrops.length - 1; i >= 0; i--) {
+        const heart = heartDrops[i];
+        heart.update();
+        heart.draw(ctx);
+
+        if (isCircleTouchingLine(heart, collidableSkewerLine)) {
+          heartDrops.splice(i, 1);
+          setHearts(Math.min(3, lives + 1));
+          floatTexts.push(new FloatText(0, 0, '+1 Life!', '#F472B6', {
+            mode: 'toast',
+            life: 46
+          }));
+          emitHeartBurst(heart.x, heart.y, 6);
+          continue;
+        }
+
+        if (heart.y - heart.radius > fireY + 120) {
+          heartDrops.splice(i, 1);
+        }
+      }
+
+      // E. 棉花糖碰撞检测与熟度更新
+      for (let i = marshmallows.length - 1; i >= 0; i--) {
+        const m = marshmallows[i];
+        m.update();
+        m.draw(ctx);
+
+        // 新增: 棉花糖与固定木质弧形反弹板物理反弹碰撞检测
+        if (!m.isMelted) {
+          resolveCollisionCircleVsArc(m);
+        }
+
+        // 碰撞旋转烤签，触发反弹与熟度增加
+        const col = !m.isMelted && m.hitCooldown <= 0
+          ? resolveCollisionCircleVsLine(m, collidableSkewerLine)
+          : false;
+        if (col) {
+          m.bounceCount++; 
+          m.hitCooldown = 12;
+          sound.playBounce(m.bounceCount);
+          const awardedSecondBounce = awardSecondBounceScore(m);
+
+          if (currentLevel === 1 && m.bounceCount === 3 && !hasShownDropGuide) {
+            hasShownDropGuide = true;
+            showDropGuide(m);
+          }
+
+          if (m.bounceCount >= 4) {
+            perfectStreak = 0;
+            floatTexts.push(new FloatText(m.x, m.y - 15, "Burnt!", "#EF4444"));
+            maybeShowBurntToast(m);
+            sound.playBounce(4);
+            if (!m.hasLostLife) {
+              m.hasLostLife = true;
+              m.isMelted = true;
+              setHearts(Math.max(0, lives - 1));
+            }
+            if (lives === 0) {
+              triggerGameOver();
+            }
+          } else {
+            const texts = ["Warming Up!", "Nice!", "Hot Streak!"];
+            const colors = ["#FEF08A", "#FB923C", "#FBBF24"];
+            if (!(awardedSecondBounce && m.bounceCount === 2)) {
+              floatTexts.push(new FloatText(
+                m.x, m.y - 15, 
+                texts[m.bounceCount - 1], 
+                colors[m.bounceCount - 1]
+              ));
+            }
+          }
+        }
+
+        // 棉花糖之间的物理防重叠推开
+        for (let j = i - 1; j >= 0; j--) {
+          const other = marshmallows[j];
+          const dx = other.x - m.x;
+          const dy = other.y - m.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const minDist = m.radius + other.radius;
+          if (dist < minDist) {
+            const overlap = minDist - dist;
+            const nx = dx / (dist || 1);
+            const ny = dy / (dist || 1);
+            m.x -= nx * overlap * 0.5;
+            m.y -= ny * overlap * 0.5;
+            other.x += nx * overlap * 0.5;
+            other.y += ny * overlap * 0.5;
+            const tempVx = m.vx;
+            m.vx = other.vx * 0.5;
+            other.vx = tempVx * 0.5;
+          }
+        }
+
+        // 碰撞落木柴障碍物被撞飞
+        obstacles.forEach(obs => {
+          const dx = obs.x - m.x;
+          const dy = obs.y - m.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const minDist = m.radius + obs.radius;
+          if (dist < minDist) {
+            const overlap = minDist - dist;
+            const nx = dx / (dist || 1);
+            const ny = dy / (dist || 1);
+            m.x -= nx * overlap;
+            m.y -= ny * overlap;
+            m.vx = -nx * 4;
+            m.vy = -ny * 3;
+            floatTexts.push(new FloatText(m.x, m.y - 15, "Log Bump!", "#9A3412"));
+          }
+        });
+
+        // 落入底层火堆：判定最终烘烤分数值
+        if (m.y >= fireY + 10) {
+          if (m.bounceCount === 3) {
+            perfectStreak++;
+            score += 3;
+            sound.playDeliver();
+            showScoreBurst(m.x, m.y, 3, 'PERFECT');
+            maybeShowSmoreStreak(m.x, m.y);
+
+            if (currentLevel === 1 && score >= 3) {
+              triggerLevelClear();
+            }
+
+            for (let k = 0; k < 8; k++) {
+              particles.push(new Particle(
+                m.x, fireY + 10,
+                (Math.random() - 0.5) * 4.8,
+                -Math.random() * 4.2 - 1.2,
+                '#FBBF24',
+                Math.random() * 2.6 + 1.4,
+                24
+              ));
+            }
+          } else if (m.bounceCount === 2) {
+            perfectStreak = 0;
+            floatTexts.push(new FloatText(0, 0, "So close!", "#FDE68A", {
+              mode: 'toast',
+              life: 44
+            }));
+            sound.playSizzle();
+          } else if (m.bounceCount < 3) {
+            perfectStreak = 0;
+            floatTexts.push(new FloatText(m.x, fireY - 10, "Too Raw!", "#94A3B8"));
+            sound.playSizzle();
+          } else {
+            perfectStreak = 0;
+            floatTexts.push(new FloatText(m.x, fireY - 10, "Burnt!", "#EF4444"));
+            maybeShowBurntToast(m);
+            sound.playSizzle();
+          }
+          marshmallows.splice(i, 1);
+        } else if (m.y > fireY + 120) {
+          marshmallows.splice(i, 1);
+        }
+      }
+
+      drawCampfire();
+
+      // 氛围粒子绘制
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // 漂浮文字绘制
+      for (let i = floatTexts.length - 1; i >= 0; i--) {
+        const ft = floatTexts[i];
+        ft.update();
+        ft.draw(ctx);
+        if (ft.alpha <= 0) floatTexts.splice(i, 1);
+      }
+    }
+
+    // --- 指针与触控事件监听 (支持360°旋转和随距离缩放木签长度) ---
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function pointToSegmentDistance(px, py, x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const lenSq = dx * dx + dy * dy;
+      if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+
+      let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+      t = Math.max(0, Math.min(1, t));
+      const cx = x1 + t * dx;
+      const cy = y1 + t * dy;
+      return Math.hypot(px - cx, py - cy);
+    }
+
+    function isPointerNearSkewer(pos) {
+      return pointToSegmentDistance(
+        pos.x, pos.y,
+        stick.pivotX, stick.pivotY,
+        stick.targetX, stick.targetY
+      ) <= SKEWER_DRAG_HIT_RADIUS;
+    }
+
+    function handlePointerDown(e) {
+      if (!gameActive) return;
+      const pos = getPointerPos(e);
+      isDrawing = true;
+
+      if (isPointerNearSkewer(pos)) {
+        sound.playSizzle();
+        return;
+      }
+      
+      const dx = pos.x - stick.pivotX;
+      const dy = pos.y - stick.pivotY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      stick.angle = Math.atan2(dy, dx);
+      stick.length = Math.max(80, Math.min(stick.maxLength, distance));
+      stick.update();
+
+      sound.playSizzle(); 
+    }
+
+    function handlePointerMove(e) {
+      if (!isDrawing) return;
+      const pos = getPointerPos(e);
+      
+      const dx = pos.x - stick.pivotX;
+      const dy = pos.y - stick.pivotY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      stick.angle = Math.atan2(dy, dx);
+      stick.length = Math.max(80, Math.min(stick.maxLength, distance));
+      stick.update();
+    }
+
+    function handlePointerUp() {
+      isDrawing = false;
+    }
+
+    canvas.addEventListener('mousedown', handlePointerDown);
+    canvas.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      handlePointerDown(e);
+    }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      handlePointerMove(e);
+    }, { passive: false });
+    window.addEventListener('touchend', handlePointerUp);
+
+    // --- 界面按钮交互面板控制器 ---
+    document.getElementById('start-btn').addEventListener('click', () => {
+      sound.init();
+      tutorialOverlay.classList.add('hidden');
+      initLevel(1);
+      gameActive = true;
+      requestAnimationFrame(showDragGuideOnce);
+    });
+
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      gameoverOverlay.classList.add('hidden');
+      score = 0;
+      scoreDisplay.textContent = 0;
+      initLevel(currentLevel);
+      gameActive = true;
+    });
+
+    shareBtn.addEventListener('click', () => {
+      handleShareResult();
+    });
+
+    document.getElementById('next-level-btn').addEventListener('click', () => {
+      levelclearOverlay.classList.add('hidden');
+      score = 0;
+      scoreDisplay.textContent = 0;
+      initLevel(2);
+      gameActive = true;
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      initLevel(currentLevel);
+      stick.angle = -Math.PI / 4;
+      stick.length = 130;
+      stick.update();
+
+      floatTexts.length = 0;
+      particles.length = 0;
+      gameActive = true;
+      gameoverOverlay.classList.add('hidden');
+      levelclearOverlay.classList.add('hidden');
+    });
+
+    const toggleSettings = (show) => {
+      settingsPanel.style.transform = show ? 'translateY(0)' : 'translateY(100%)';
+    };
+    document.getElementById('btn-settings').addEventListener('click', () => {
+      toggleSettings(true);
+      toggleShop(false);
+    });
+    document.getElementById('close-settings').addEventListener('click', () => toggleSettings(false));
+
+    const toggleSoundBtn = document.getElementById('toggle-sound');
+    toggleSoundBtn.addEventListener('click', () => {
+      sound.enabled = !sound.enabled;
+      if (sound.enabled) {
+        toggleSoundBtn.classList.remove('bg-slate-700', 'justify-start');
+        toggleSoundBtn.classList.add('bg-amber-500', 'justify-end');
+      } else {
+        toggleSoundBtn.classList.remove('bg-amber-500', 'justify-end');
+        toggleSoundBtn.classList.add('bg-slate-700', 'justify-start');
+      }
+    });
+
+    // 烤签 maximum length adjust slider
+    const stickLengthSlider = document.getElementById('stick-length-slider');
+    const stickLengthVal = document.getElementById('stick-length-val');
+    stickLengthSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      stick.maxLength = val;
+      if (stick.length > val) {
+        stick.length = val;
+      }
+      stick.update();
+      stickLengthVal.textContent = `${val} px`;
+    });
+
+    // Reset default skewer tilt
+    document.getElementById('reset-stick-btn').addEventListener('click', () => {
+      stick.angle = -Math.PI / 4;
+      stick.length = 130;
+      stick.update();
+      toggleSettings(false);
+    });
+
+    const toggleShop = (show) => {
+      shopPanel.style.transform = show ? 'translateY(0)' : 'translateY(100%)';
+    };
+    document.getElementById('btn-shop').addEventListener('click', () => {
+      toggleShop(true);
+      toggleSettings(false);
+    });
+    document.getElementById('close-shop').addEventListener('click', () => toggleShop(false));
+
+    function saveFoodSkin() {
+      try {
+        localStorage.setItem('perfect_roast_food_skin', currentFoodSkin);
+      } catch {}
+    }
+
+    function updateShopSelection(type) {
+      const sameTypeItems = document.querySelectorAll(`.shop-item[data-type="${type}"]`);
+      sameTypeItems.forEach(item => {
+        const id = item.getAttribute('data-id');
+        const price = parseInt(item.getAttribute('data-price') || '0', 10);
+        const selected = (type === 'line' && currentLineSkin === id)
+          || (type === 'face' && currentFaceSkin === id)
+          || (type === 'food' && currentFoodSkin === id);
+        const owned = type === 'food' || purchasedSkins[type]?.includes(id);
+        const status = item.querySelector('.shop-item-status');
+
+        item.classList.toggle('border-amber-500', selected);
+        item.classList.toggle('bg-amber-500/10', selected);
+        item.classList.toggle('border-slate-800', !selected);
+        item.classList.toggle('bg-white/5', !selected);
+
+        if (status) {
+          if (selected) {
+            status.textContent = 'Selected';
+            status.className = 'shop-item-status text-[10px] text-amber-400';
+          } else if (owned) {
+            status.textContent = type === 'food' ? 'Free' : 'Owned';
+            status.className = `shop-item-status text-[10px] ${type === 'food' ? 'text-slate-400' : 'text-amber-300'}`;
+          } else {
+            status.textContent = `${price} score`;
+            status.className = 'shop-item-status text-[10px] text-slate-400';
+          }
+        }
+      });
+    }
+
+    const shopItems = document.querySelectorAll('.shop-item');
+    shopItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const type = item.getAttribute('data-type');
+        const id = item.getAttribute('data-id');
+        const price = parseInt(item.getAttribute('data-price') || '0', 10);
+
+        if (type === 'food') {
+          selectSkin(type, id);
+          return;
+        }
+
+        if (!purchasedSkins[type].includes(id)) {
+          if (score < price) {
+            floatTexts.push(new FloatText(0, 0, 'Need more score!', '#EF4444', {
+              mode: 'toast',
+              life: 42
+            }));
+            return;
+          }
+
+          score -= price;
+          updateScoreDisplay(score);
+          purchasedSkins[type].push(id);
+          floatTexts.push(new FloatText(0, 0, 'Unlocked!', '#FBBF24', {
+            mode: 'toast',
+            life: 40
+          }));
+        }
+
+        selectSkin(type, id);
+      });
+    });
+
+    function selectSkin(type, id) {
+      if (type === 'line') {
+        currentLineSkin = id;
+      } else if (type === 'face') {
+        currentFaceSkin = id;
+      } else if (type === 'food') {
+        currentFoodSkin = id;
+        saveFoodSkin();
+      }
+      updateShopSelection(type);
+    }
+
+    updateShopSelection('food');
+    updateShopSelection('line');
+    updateShopSelection('face');
+
+    // 启动主游戏循环渲染线程
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
